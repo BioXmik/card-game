@@ -1,9 +1,11 @@
 ﻿using System;
-using Cards;
+using System.Collections;
+using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
 using UnityEngine.EventSystems;
+using UnityEditor.Experimental.GraphView;
 
 namespace Cards
 {
@@ -25,18 +27,23 @@ namespace Cards
         private TextMeshPro _attack;
         [Space, SerializeField]
         private TextMeshPro _health;
-		public int ownerPlayer;
+        [Space, SerializeField]
+        private TextMeshPro _healthOfHero1;
+        [Space, SerializeField]
+        private TextMeshPro _healthOfHero2;
+        public int ownerPlayer;
         private Transform[] _positions;
         private Card[] _cards;
         private PlayerHand _camerMove;
         [SerializeField]
         private Transform _card;
+        private CardManager cardManager;
 
         public void OnStart()
         {
             _cards = new Card[_positions.Length];
         }
-		
+
         public bool IsEnable
         {
             get => _icon.enabled;
@@ -47,8 +54,17 @@ namespace Cards
             }
         }
 
+        void Start()
+        {
+            cardManager = GameObject.FindGameObjectWithTag("CardManager").GetComponent<CardManager>();
+        }
+
 		void Update()
 		{
+            if (int.Parse(_health.text) <= 0)
+            {
+                Destroy(gameObject);
+            }
 			if (transform.parent.gameObject.tag == "DropArea")
 			{
 				gameObject.transform.localPosition =  new Vector3(0, 0.1f, 0);
@@ -100,6 +116,47 @@ namespace Cards
 				_attack.text = newAttackValue.ToString();
 				_health.text = newHealthValue.ToString();
 			}
+            else if (text != null && text.text == "Выбирите вражеского юнита!")
+            {
+                text.text = "";
+                if (ownerPlayer == 1)
+                {
+                    int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
+                    _healthOfHero1.text = HealthOfHero.ToString();
+                }
+                else if (ownerPlayer == 2)
+                {
+                    int HealthOfHero = int.Parse(_healthOfHero2.text) - int.Parse(_attack.text);
+                    _healthOfHero2.text = HealthOfHero.ToString();
+                }
+            }
+            else if (text != null && text.text == "Попробуй! Атакуй!")
+            {
+                text.text = "";
+                int newHealthValue = int.Parse(_health.text);
+                _health.text = newHealthValue.ToString();
+            }
+            else if (text != null && text.text == "Выбирите вражеского юнита! Атака пройдёт позже.")
+            {
+                StartCoroutine(DelayedDamage());
+            }
+        }
+
+        public IEnumerator DelayedDamage()
+        {
+            Text text = GameObject.FindGameObjectWithTag("SelectUnitText").GetComponent<Text>();
+            text.text = "";
+            yield return new WaitForSeconds (10f);
+            if (ownerPlayer == 1)
+            {
+                int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
+                _healthOfHero1.text = HealthOfHero.ToString();
+            }
+            else if (ownerPlayer == 2)
+            {
+                int HealthOfHero = int.Parse(_healthOfHero2.text) - int.Parse(_attack.text);
+                _healthOfHero2.text = HealthOfHero.ToString();
+            }
         }
 
         public void OnPointerEnter(PointerEventData eventData)
@@ -142,28 +199,46 @@ namespace Cards
         {
 			Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
 			RaycastHit hit;
-			if (ownerPlayer == 1 && Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("CardConnectionPlayer1")) && hit.transform.childCount < 1)
+			if (cardManager != null && ownerPlayer == cardManager.walkingPlayer)
 			{
-				gameObject.transform.SetParent(hit.transform);
-			}
-			else if (ownerPlayer == 2 && Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("CardConnectionPlayer2")) && hit.transform.childCount < 1)
-			{
-				gameObject.transform.SetParent(hit.transform);
-			}
-			
-			transform.position += new Vector3(eventData.delta.x, 0f, eventData.delta.y);
+                if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("CardConnectionPlayer1")) && hit.transform.childCount < 1)
+                {
+                    gameObject.transform.SetParent(hit.transform);
+                    _cards = cardManager._playerHand1._cards;
+                    for (int i = 0; i < _cards.Length; i++)
+                    {
+                        cardManager.walkingPlayer = 2;
+                        if (_cards[i] == gameObject.GetComponent<Card>())
+                            _cards[i] = null;
+                    }
+                }
+                else if (Physics.Raycast(ray, out hit, Mathf.Infinity, LayerMask.GetMask("CardConnectionPlayer2")) && hit.transform.childCount < 1)
+                {
+                    gameObject.transform.SetParent(hit.transform);
+                    _cards = cardManager._playerHand2._cards;
+                    for (int i = 0; i < _cards.Length; i++)
+                    {
+                        cardManager.walkingPlayer = 1;
+                        if (_cards[i] == gameObject.GetComponent<Card>())
+                            _cards[i] = null;
+                    }
+                }
+				
+                
+                transform.position += new Vector3(eventData.delta.x, 0f, eventData.delta.y);
 
-            switch (State)
-            {
-                case CardStateType.InHand:
-                    var hitPos = eventData.pointerCurrentRaycast.worldPosition;
-                    var pos = transform.position;
-                    transform.position = new Vector3(hitPos.x, 0.1f, hitPos.z);
+                switch (State)
+                {
+                    case CardStateType.InHand:
+                        var hitPos = eventData.pointerCurrentRaycast.worldPosition;
+                        var pos = transform.position;
+                        transform.position = new Vector3(hitPos.x, 0.1f, hitPos.z);
 
-                    break;
-                case CardStateType.OnTable:
-                    break;
+                        break;
+                    case CardStateType.OnTable:
+                        break;
 
+                }
             }
         }
 
@@ -177,7 +252,19 @@ namespace Cards
 				{
 					GameObject.FindGameObjectWithTag("SelectUnitText").GetComponent<Text>().text = "Выбирите дружественного юнита!";
 				}
-			}
+                else if (_description.text.IndexOf("Spell Damage", StringComparison.OrdinalIgnoreCase) >= 0 || _description.text.IndexOf("Charge", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    GameObject.FindGameObjectWithTag("SelectUnitText").GetComponent<Text>().text = "Выбирите вражеского юнита!";
+                }
+                else if (_description.text.IndexOf("Taunt", StringComparison.OrdinalIgnoreCase) >= 0)
+                {
+                    GameObject.FindGameObjectWithTag("SelectUnitText").GetComponent<Text>().text = "Попробуй! Атакуй!";
+                }
+                else if (_description.text == "")
+                {
+                    GameObject.FindGameObjectWithTag("SelectUnitText").GetComponent<Text>().text = "Выбирите вражеского юнита! Атака пройдёт позже.";
+                }
+            }
         }
 
         [ContextMenu("Switch Visual")]
