@@ -166,10 +166,12 @@ namespace Cards
             {
                 case CardStateType.InHand:
                     transform.localScale *= 3f;
+                    GetComponent<BoxCollider>().size /= 3f;
                     transform.position += new Vector3(0f, 0f, 100f);
                     break;
                 case CardStateType.OnTable:
                     transform.localScale *= 3f;
+                    GetComponent<BoxCollider>().size /= 3f;
                     transform.position += new Vector3(0f, 0f, 100f);
                     break;
             }
@@ -181,10 +183,12 @@ namespace Cards
             {
                 case CardStateType.InHand:
                     transform.localScale /= 3f;
+                    GetComponent<BoxCollider>().size *= 3f;
                     transform.position -= new Vector3(0f, 0f, 100f);
                     break;
                 case CardStateType.OnTable:
                     transform.localScale /= 3f;
+                    GetComponent<BoxCollider>().size *= 3f;
                     transform.position -= new Vector3(0f, 0f, 100f);
                     break;
             }
