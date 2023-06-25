@@ -121,13 +121,32 @@ namespace Cards
                 text.text = "";
                 if (ownerPlayer == 1)
                 {
-                    int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
-                    _healthOfHero1.text = HealthOfHero.ToString();
+                    if (int.Parse(_health.text) - int.Parse(_attack.text) <= 0)
+                    {
+                        int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
+                        _healthOfHero1.text = HealthOfHero.ToString();
+                        Destroy(gameObject);
+                    }
+                    else
+                    {
+                        int newHealth = int.Parse(_health.text) - int.Parse(_attack.text);
+                        _health.text = newHealth.ToString();
+                    }
+                    
                 }
                 else if (ownerPlayer == 2)
                 {
-                    int HealthOfHero = int.Parse(_healthOfHero2.text) - int.Parse(_attack.text);
-                    _healthOfHero2.text = HealthOfHero.ToString();
+                    if (int.Parse(_health.text) - int.Parse(_attack.text) <= 0)
+                    {
+                        int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
+                        _healthOfHero2.text = HealthOfHero.ToString();
+                        Destroy(gameObject);
+                    }
+                    else
+                    {
+                        int newHealth = int.Parse(_health.text) - int.Parse(_attack.text);
+                        _health.text = newHealth.ToString();
+                    }
                 }
             }
             else if (text != null && text.text == "Попробуй! Атакуй!")
@@ -149,13 +168,31 @@ namespace Cards
             yield return new WaitForSeconds (10f);
             if (ownerPlayer == 1)
             {
-                int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
-                _healthOfHero1.text = HealthOfHero.ToString();
+                if (int.Parse(_health.text) - int.Parse(_attack.text) <= 0)
+                {
+                    int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
+                    _healthOfHero1.text = HealthOfHero.ToString();
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    int newHealth = int.Parse(_health.text) - int.Parse(_attack.text);
+                    _health.text = newHealth.ToString();
+                }
             }
             else if (ownerPlayer == 2)
             {
-                int HealthOfHero = int.Parse(_healthOfHero2.text) - int.Parse(_attack.text);
-                _healthOfHero2.text = HealthOfHero.ToString();
+                if (int.Parse(_health.text) - int.Parse(_attack.text) <= 0)
+                {
+                    int HealthOfHero = int.Parse(_healthOfHero1.text) - int.Parse(_attack.text);
+                    _healthOfHero2.text = HealthOfHero.ToString();
+                    Destroy(gameObject);
+                }
+                else
+                {
+                    int newHealth = int.Parse(_health.text) - int.Parse(_attack.text);
+                    _health.text = newHealth.ToString();
+                }
             }
         }
 
